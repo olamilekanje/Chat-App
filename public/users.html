@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="index.css">
+       
+</head>
+<body>
+    <!-- User Details -->
+    <div id="user-details" class="container my-2">
+        <!-- User details will be loaded here by JavaScript -->
+    </div>
+
+    <!-- Chat Container -->
+    <div id="userList" class="container chat-container"></div>
+
+    <!-- Axios and Chat JS -->
+    <script src="axios.min.js"></script>
+    <script> 
+    const API_URL = 'http://localhost:5000';
+
+    async function getAllUsers() {
+    try {
+        const response = await fetch(`${API_URL}/api/all-users`);
+        const users = await response.json();
+
+        if (response.ok) {
+            displayAllUsers(users);
+        } else {
+            console.error('Error fetching users:', users.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// Custom date formatting function
+function formatLastSeen(date) {
+    const now = new Date();
+    const lastSeen = new Date(date);
+
+    const diffInSeconds = Math.floor((now - lastSeen) / 1000);
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInSeconds < 60) {
+        return 'Just now';
+    } else if (diffInMinutes < 60) {
+        return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+    } else if (diffInHours < 24 && now.toDateString() === lastSeen.toDateString()) {
+        return `Today at ${lastSeen.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    } else if (diffInDays === 1) {
+        return `Yesterday at ${lastSeen.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    } else {
+        return `${lastSeen.getDate()}/${lastSeen.getMonth() + 1}/${lastSeen.getFullYear()}`;
+    }
+}
+
+function displayAllUsers(users) {
+    const userContainer = document.getElementById('userList');
+    userContainer.innerHTML = ''; // Clear previous content
+
+    users.forEach(user => {
+        const lastSeenTime = formatLastSeen(user.lastSeen); // Use the custom date formatting function
+
+        // Create the HTML structure for each user with user ID in the link
+        const userHTML = `
+            <a href="chat.html?userId=${user._id}" style="text-decoration: none; color: brown; margin: 8px;">
+                <div class="d-flex align-items-center p-3" style="border: 1px solid brown; border-radius: 20px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
+                        <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+                        <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
+                    </svg>
+                    &nbsp; &nbsp;
+                    <div>
+                        <h6 class="m-0">${user.name}</h6>
+                        <small>Last seen: ${lastSeenTime}</small>
+                    </div>
+                </div>
+            </a>
+        `;
+
+        // Inject the HTML into the DOM
+        userContainer.innerHTML += userHTML;
+    });
+}
+
+
+// Call the function to get all users
+getAllUsers();
+
+
+
+    </script>
+    <script>
